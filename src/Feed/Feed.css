@@ -1,0 +1,16 @@
+
+
+.feed-header{
+    text-align:center;
+    text-decoration: underline;
+    color:#fff;
+}
+
+.feed-wrapper{
+    margin:0 auto;
+    width:75%;
+    display:flex;
+    justify-content: space-between;
+    flex-direction: row;
+    align-items: center;
+}

@@ -1,0 +1,43 @@
+.Video{
+    display:flex;
+    height:500px;
+    width: 100%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    margin:25px;
+    cursor: pointer;
+    animation: scaleDown 500ms;
+}
+.Video:not(hover){
+
+}
+.Video:hover{
+    animation: scaleUp 500ms forwards;
+}
+
+.video-name{
+    background:rgba(255,255,255,0.75);
+    height:25px;
+    padding:5px;
+    width: 100%;
+    margin-top:15px;
+    text-align: center;
+}
+
+@keyframes scaleUp {
+    0%{
+        transform: scale(1);
+    }
+    100%{
+        transform: scale(1.05);
+    }
+}
+@keyframes scaleDown {
+    0%{
+        transform: scale(1.05);
+    }
+    100%{
+        transform: scale(1);
+    }
+}
