@@ -9,9 +9,7 @@ var data = [
 ];
 
 class Feed extends React.Component {state = { data : data}
-    redirect = (value) => {
-        window.open(value, '_blank', 'noopener,noreferrer')
-    }
+
     render() {
         return (
             <div className="Feed">
@@ -19,14 +17,14 @@ class Feed extends React.Component {state = { data : data}
                 <div className="feed-wrapper">
                     {this.state.data.map((dataitem, i) => {
                         console.log('Video Mapped');
-                        return (<Video dataFromParent={dataitem} redirect={this.redirect} />)
+                        return (<Video dataFromParent={dataitem} />)
                     })}
                 </div>
             </div>
         );
     }
 }
- 
+
 //
 // function Feed() {
 //     return (

@@ -6,12 +6,13 @@ class Video extends React.Component {
 
     render() {
         return (
-            <div className="Video" style={{ backgroundImage: 'url(' + this.props.dataFromParent.img + ')' }}
+            <a className="Video" style={{ backgroundImage: 'url(' + this.props.dataFromParent.img + ')' }}
                  data-url={this.props.dataFromParent.url}
-                 onClick= { () => this.props.redirect(this.props.dataFromParent.url)}
+                 href={this.props.dataFromParent.url}
+                 target="_blank"
             >
                 <div className="video-name">{this.props.dataFromParent.name}</div>
-            </div>
+            </a>
         );
     }
 }
