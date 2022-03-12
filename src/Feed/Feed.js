@@ -26,7 +26,7 @@ class Feed extends React.Component {state = { data : data}
         );
     }
 }
-
+ 
 //
 // function Feed() {
 //     return (
