@@ -10,7 +10,7 @@ var data = [
 
 class Feed extends React.Component {state = { data : data}
     redirect = (value) => {
-        window.location.href=value;
+        window.open(value, '_blank', 'noopener,noreferrer')
     }
     render() {
         return (
