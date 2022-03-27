@@ -34,5 +34,11 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "cacheDirectories": [
+    "/node_modules"
+  ],
+  "scripts": {
+    "heroku-postbuild": "npm install && npm run build"
   }
 }

@@ -9,21 +9,17 @@ from flask import request
 
 from flask import Flask, Api, jsonify, redirect, url_for, request
 
-app = Flask(__name__, static_folder='skate-vid-feed/build', static_url_path='')
+app = Flask(__name__, static_folder='./build', static_url_path='/')
 api = Api(app)
 CORS(app)
 
-@app.route('/api', methods=['GET'])
-@cross_origin()
-def index():
-    return {
-        "test": "this is a test"
-    }
-
 @app.route('/')
-@cross_origin()
-def serve():
-    return send_from_directory(app.static_folder, 'index.html')
+def index():
+    return app.send_static_file('index.html')
+
+@app.errorhandler(404)
+def not_found(e):
+    return app.send_static_file('index.html')
 
 class BerricsVideoItem:
     def __init__(self, title, description, img_src, url, date, source, subsection):
@@ -178,6 +174,6 @@ api.add_resource(get_feed_data, '/feed')
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0', debug=False, port=int(os.environ.get("PORT", 5000)))
 
 
