@@ -1,1 +1,1 @@
-web: unicorn app:name
+web: unicorn app:main
