@@ -7,7 +7,8 @@ from flask_cors import CORS, cross_origin
 from flask import render_template
 from flask import request
 
-from flask import Flask, Api, jsonify, redirect, url_for, request
+from flask import Flask, jsonify, redirect, url_for, request
+from flask_restful import Api
 
 app = Flask(__name__, static_folder='./build', static_url_path='/')
 api = Api(app)
@@ -141,11 +142,12 @@ def generate_data():
     return "Fin"
 
 @app.route('/feed', methods = ['GET'])
+@cross_origin(supports_credentials=True)
 def get_feed_data():
 
-    print(request.url)
-    if('http://127.0.0.1' not in request.url and 'skate-feed.herokuapp.com' not in request.url):
-        return "not valid request"
+    # print(request.url)
+    # if('http://127.0.0.1' not in request.url and 'localhost:3000' not in request.url):
+    #     return "not valid request"
 
     conn = psycopg2.connect(host='ec2-52-70-186-184.compute-1.amazonaws.com',
                             database='dcuhruluoeo0tn',
