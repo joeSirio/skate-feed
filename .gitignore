@@ -9,6 +9,7 @@
 /coverage
 
 # production
+/skate-feed-api/dbInfo.json
 #/build
 
 # misc

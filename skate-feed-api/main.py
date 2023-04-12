@@ -1,18 +1,24 @@
-from bs4 import BeautifulSoup
 import requests
 import psycopg2
+import json
+import os
+from datetime import datetime
+from bs4 import BeautifulSoup
 from flask import Flask
 from flask.helpers import send_from_directory
 from flask_cors import CORS, cross_origin
 from flask import render_template
 from flask import request
-
 from flask import Flask, jsonify, redirect, url_for, request
 from flask_restful import Api
 
 app = Flask(__name__, static_folder='./build', static_url_path='/')
 api = Api(app)
 CORS(app)
+db_username = ""
+db_password = ""
+db_host = ""
+db_database = ""
 
 @app.route('/')
 def index():
@@ -22,7 +28,31 @@ def index():
 def not_found(e):
     return app.send_static_file('index.html')
 
-class BerricsVideoItem:
+def getJsonData():
+    try:
+        with open("./skate-feed-api/source_data.json", "r") as j:
+            return json.loads(j.read())["data"]
+        
+    except ValueError as e:
+        print(e)
+
+    return
+
+def getDbInfo():
+    try:
+        with open("./skate-feed-api/dbInfo.json", "r") as j:
+            data = json.loads(j.read())["data"]
+            global db_username, db_password, db_host, db_database
+            db_username = data['username']
+            db_password = data['password']
+            db_host = data['host']
+            db_database = data['database']
+    except ValueError as e:
+        print(e)
+
+    return
+
+class VideoItem:
     def __init__(self, title, description, img_src, url, date, source, subsection):
         self.title = title
         self.description = description
@@ -33,135 +63,176 @@ class BerricsVideoItem:
         self.subsection = subsection
 
 
-def get_berrics_video_data_for_page(berrics_url: str, subsection: str) -> []:
-    req = requests.get(berrics_url)
-    src = req.text
+def get_video_data_for_page(src: dict):
 
-    soup = BeautifulSoup(src, 'lxml')
+    req = requests.get(src['page_url'])
+    html = req.text
 
-    videos = soup.find_all("div", {"class": "row post"})
+    soup = BeautifulSoup(html, 'lxml')
+
+    videos = soup.find_all(src['video_container']['tag'], {src['video_container']['target_type']: src['video_container']['target_name']})
 
     video_list = []
 
     for video in videos:
+        try:
+            title = ""
+            if video.find(src['title']['tag'], {src['title']['target_type']: src['title']['target_name']}):
+                title = video.find(src['title']['tag'], {src['title']['target_type']: src['title']['target_name']}).text
 
-        title = ""
-        if video.find("h3", {"class": "content-title"}):
-            title = video.find("h3", {"class": "content-title"}).text
+            description = ""
+            if video.find(src['description']['tag'], {src['description']['target_type']: src['description']['target_name']}):
+                description = video.find(src['description']['tag'], {src['description']['target_type']: src['description']['target_name']}).text
 
-        description = ""
-        if video.find("div", {"class": "content-tagline"}):
-            description = video.find("div", {"class": "content-tagline"}).text
+            img_src = ""
+            if video.find(src['img_src']['tag'], {src['img_src']['target_type']: src['img_src']['target_name']}):
+                img_src = video.find(src['img_src']['tag'], {src['img_src']['target_type']: src['img_src']['target_name']}).find(src['img_src']['find_tag'])[src['img_src']['find_index']]
 
-        img_src = ""
-        if video.find("div", {"class": "feed-teaser-col"}):
-            img_src = video.find("div", {"class": "feed-teaser-col"}).find("img")["src"]
+                if "://" not in img_src:
+                    img_src = src["page_url"] + img_src
+            url = ""
+            if video.find(src['url']['tag'], {src['url']['target_type']: src['url']['target_name']}):
+                url = video.find(src['url']['tag'], {src['url']['target_type']: src['url']['target_name']}).find(src['url']['find_tag'])[src['url']['find_index']]
+                
+            #Need specific find function for VHS Mag sources for url
+            if src['source'] == 'VHS Mag':
+                url = video.find(src['url']['find_tag'])[src['url']['find_index']]
+                
+            if url != "" and "://" not in url:
+                url = src["page_url"] + url
 
-        url = ""
-        if video.find("h3", {"class": "content-title"}).find("a"):
-            url = video.find("h3", {"class": "content-title"}).find("a")["href"]
+            date = ""
+            if video.find(src['date']['tag'], {src['date']['target_type']: src['date']['target_name']}):
+                dateSrc = video.find(src['date']['tag'], {src['date']['target_type']: src['date']['target_name']}).find(src['date']['find_tag'])
+                if dateSrc is None:
+                    date = video.find(src['date']['tag'], {src['date']['target_type']: src['date']['target_name']}).text
+                else:
+                    date = dateSrc.text
 
-        date = ""
-        if video.find("div", {"class": "content-meta"}).find("time"):
-            date = video.find("div", {"class": "content-meta"}).find("time").text
+            #Fix date format for place.tv videos
+            if src['source'] == 'Place.tv':
+                dateArr = date.split(' ')
+                date = dateArr[1] + ' ' + dateArr[0].replace('.', '') + ' ' + dateArr[2]
 
-        video_list.append(BerricsVideoItem(title, description, img_src, url, date, 'Berrics', subsection))
+            #Prevent duplicates (some websites have 2 of the same videos but for different languages, this will prevent pulling both)
+            if len(video_list) == 0:
+                video_list.append(VideoItem(title, description, img_src, url, date, src['source'], src['section']))
+            elif any(video.url == url or video.img_src == img_src for video in video_list) != True:
+                video_list.append(VideoItem(title, description, img_src, url, date, src['source'], src['section']))
+        except Exception as e:
+            print(e)
 
     return video_list
 
-def get_reddit_video_data_for_page() -> []:
-    # note that CLIENT_ID refers to 'personal use script' and SECRET_TOKEN to 'token'
-    auth = requests.auth.HTTPBasicAuth('2Neq-AW3-hteVVOD-f66bw', 'IzDkT00NWaMlTmimE7wBWiPFEyBoBA')
+def already_generated_data():
+    global db_username, db_password, db_host, db_database
+    conn = psycopg2.connect(host=db_host, user=db_username, password=db_password, database=db_database)
 
-    # here we pass our login method (password), username, and password
-    data = {'grant_type': 'password',
-            'username': 'Puzzleheaded_Bite975',
-            'password': '<PASSWORD>'}
-
-    # setup our header info, which gives reddit a brief description of our app
-    headers = {'User-Agent': 'MyBot/0.0.1'}
-
-    # send our request for an OAuth token
-    res = requests.post('https://www.reddit.com/api/v1/access_token',
-                        auth=auth, data=data, headers=headers)
-
-    # convert response to JSON and pull access_token value
-    TOKEN = res.json()['access_token']
-
-    # add authorization to our headers dictionary
-    headers = {**headers, **{'Authorization': f"bearer {TOKEN}"}}
-
-    # while the token is valid (~2 hours) we just add headers=headers to our requests
-    requests.get('https://oauth.reddit.com/api/v1/me', headers=headers)
-
-    res = requests.get("https://oauth.reddit.com/r/skateboarding/hot",
-                       headers=headers)
-
-    print(res.json())  # let's see what we get
+    cur = conn.cursor()
+    cur.execute("""Select exists(Select 1 From "ScrapeHistory" WHERE "Date" = %s AND "Success" = %s)""", 
+    (datetime.today().strftime('%Y-%m-%d'), True ))
+    
+    if not cur.fetchone()[0]:
+        return False
+    return True
 
 @app.route('/generate')
 def generate_data():
-    # get_reddit_video_data_for_page()
+    print('generating')
 
-    berrics_video_source_list = [
-        {"url": "https://theberrics.com/series/bangin", "section": "bangin"},
-        {"url": "https://theberrics.com/series/first-try-fridays", "section": "first-try-fridays"}
-    ]
+    if already_generated_data():
+        print('data already generated today')
+        return
+
+    src_data = getJsonData()
+        
+    print('successfully retrieved json data')
+
 
     list_of_videos = []
 
-    for video_source in berrics_video_source_list:
-        list_of_videos.extend(get_berrics_video_data_for_page(video_source["url"], video_source["section"]))
+    print('starting scrape process')
 
-    print(len(list_of_videos))
+    for video_source in src_data:
+        list_of_videos.extend(get_video_data_for_page(video_source))
+        
+    print('scrape proccess successful')
 
-    conn = psycopg2.connect(host='ec2-52-70-186-184.compute-1.amazonaws.com',
-                            database='dcuhruluoeo0tn',
-                            user='vlmgxlegrduwss',
-                            password='89e6c4f2f498c01a2339daf246e60d9e25f64c3b408108fd5ad4af716ea31b68')
+    print('starting connection to upload data')
 
-    for video in list_of_videos:
+    global db_username, db_password, db_host, db_database
+    conn = psycopg2.connect(host=db_host, user=db_username, password=db_password, database=db_database)
+
+    try:
+        for video in list_of_videos:
+            cur = conn.cursor()
+            cur.execute("""Select exists(Select 1 From "Videos" WHERE "Title" = %s)""", (video.title,))
+
+            if not cur.fetchone()[0]:
+                sql = """INSERT INTO "Videos"("Title", "Description", "ImgSrc", "Url", "UploadDate", "Source", "Section", "Watched") VALUES (%s,%s,%s,%s,%s,%s,%s,%s)"""
+
+                try:
+                    cur.execute(sql, (
+                    video.title, video.description, video.img_src, video.url, video.update_date, video.source,
+                    video.subsection, False))
+                    conn.commit()
+                    cur.close()
+                except (Exception, psycopg2.DatabaseError) as error:
+                    print(error)
+        
         cur = conn.cursor()
-        cur.execute("Select exists(Select 1 From video_feed WHERE title = %s)", (video.title,))
+        scrape_history_update = """INSERT INTO "ScrapeHistory"("Date", "Message", "Success") Values (%s,%s,%s)"""
+        cur.execute(scrape_history_update, (
+            datetime.today().strftime('%Y-%m-%d'), '', True
+        ))
+        conn.commit()
+        cur.close()
 
-        if not cur.fetchone()[0]:
-            sql = "INSERT INTO video_feed(title, description, img_src, url, update_date, source, subsection) VALUES (%s,%s,%s,%s,%s,%s,%s)"
+        print('successfully updloaded data to database')
+    except Exception as error:
+        print(error)
+        scrape_history_update = """INSERT INTO "ScrapeHistory"("Date", "Message", "Success") Values (%s,%s,%s)"""
+        cur.execute(scrape_history_update, (
+            datetime.today().strftime('%Y-%m-%d'), error, False
+        ))
+        conn.commit()
+        cur.close()
 
-            try:
-                cur.execute(sql, (
-                video.title, video.description, video.img_src, video.url, video.update_date, video.source,
-                video.subsection))
-                conn.commit()
-                cur.close()
-            except (Exception, psycopg2.DatabaseError) as error:
-                print(error)
 
     if conn is not None:
         conn.close()
-
-    return "Fin"
+    return "FIN"
 
 @app.route('/feed', methods = ['GET'])
 @cross_origin(supports_credentials=True)
 def get_feed_data():
+    generate_data()
 
-    # print(request.url)
-    # if('http://127.0.0.1' not in request.url and 'localhost:3000' not in request.url):
-    #     return "not valid request"
-
-    conn = psycopg2.connect(host='ec2-52-70-186-184.compute-1.amazonaws.com',
-                            database='dcuhruluoeo0tn',
-                            user='vlmgxlegrduwss',
-                            password='89e6c4f2f498c01a2339daf246e60d9e25f64c3b408108fd5ad4af716ea31b68')
+    global db_username, db_password, db_host, db_database
+    conn = psycopg2.connect(host=db_host, user=db_username, password=db_password, database=db_database)
 
     cur = conn.cursor()
-    sql = "SELECT * FROM video_feed"
-    data = ''
+    sql = """SELECT * FROM "Videos" """
+    dto = []
 
     try:
         cur.execute(sql)
-        data = cur.fetchall()
-        print(data)
+        results = cur.fetchall()
+
+        for result in results:
+            data = {
+                "Id": result[0],
+                "Title": result[1],
+                "Description": result[2],
+                "ImgSrc": result[3],
+                "Url": result[4],
+                "UploadDate": result[5],
+                "Source": result[6],
+                "Section": result[7],
+                "Watched": result[8]
+            }
+            dto.append(data)
+
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
@@ -170,12 +241,11 @@ def get_feed_data():
     if conn is not None:
         conn.close()
 
-    return jsonify(data)
-
-api.add_resource(get_feed_data, '/feed')
-
+    dto.sort(key=lambda x: x["UploadDate"], reverse=True)
+    return jsonify(dto)
 
 if __name__ == '__main__':
+    getDbInfo()
     app.run(host='0.0.0.0', debug=False, port=int(os.environ.get("PORT", 5000)))
 
 

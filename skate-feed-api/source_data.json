@@ -1,0 +1,203 @@
+{ 
+    "data": [
+        {
+            "source": "The Berrics",
+            "page_url": "https://theberrics.com/series/bangin",
+            "section": "Bangin [The Berrics]",
+            "video_container": {
+                "tag": "div",
+                "target_type": "class",
+                "target_name": "row post"
+            },
+            "title": {
+                "tag": "h3",
+                "target_type": "class",
+                "target_name": "content-title"
+            },
+            "description": {
+                "tag": "div",
+                "target_type": "class",
+                "target_name": "content-tagline"
+            },
+            "img_src": {
+                "tag": "div",
+                "target_type": "class",
+                "target_name": "feed-teaser-col",
+                "find_tag": "img",
+                "find_index": "src"
+            },
+            "url":{
+                "tag": "h3",
+                "target_type": "class",
+                "target_name": "content-title",
+                "find_tag": "a",
+                "find_index": "href"
+            },
+            "date":{
+                "tag": "div",
+                "target_type": "class",
+                "target_name": "content-meta",
+                "find_tag": "time"
+            }
+        },
+        {
+            "source": "The Berrics",
+            "page_url": "https://theberrics.com/series/battle-royale",
+            "section": "Battle Royale [The Berrics]",
+            "video_container": {
+                "tag": "div",
+                "target_type": "class",
+                "target_name": "row post"
+            },
+            "title": {
+                "tag": "h3",
+                "target_type": "class",
+                "target_name": "content-title"
+            },
+            "description": {
+                "tag": "div",
+                "target_type": "class",
+                "target_name": "content-tagline"
+            },
+            "img_src": {
+                "tag": "div",
+                "target_type": "class",
+                "target_name": "feed-teaser-col",
+                "find_tag": "img",
+                "find_index": "src"
+            },
+            "url":{
+                "tag": "h3",
+                "target_type": "class",
+                "target_name": "content-title",
+                "find_tag": "a",
+                "find_index": "href"
+            },
+            "date":{
+                "tag": "div",
+                "target_type": "class",
+                "target_name": "content-meta",
+                "find_tag": "time"
+            }
+        },{
+            "source": "The Berrics",
+            "page_url": "https://theberrics.com/series/first-try-fridays-live",
+            "section": "First Try Fridays [The Berrics]",
+            "video_container": {
+                "tag": "div",
+                "target_type": "class",
+                "target_name": "row post"
+            },
+            "title": {
+                "tag": "h3",
+                "target_type": "class",
+                "target_name": "content-title"
+            },
+            "description": {
+                "tag": "div",
+                "target_type": "class",
+                "target_name": "content-tagline"
+            },
+            "img_src": {
+                "tag": "div",
+                "target_type": "class",
+                "target_name": "feed-teaser-col",
+                "find_tag": "img",
+                "find_index": "src"
+            },
+            "url":{
+                "tag": "h3",
+                "target_type": "class",
+                "target_name": "content-title",
+                "find_tag": "a",
+                "find_index": "href"
+            },
+            "date":{
+                "tag": "div",
+                "target_type": "class",
+                "target_name": "content-meta",
+                "find_tag": "time"
+            }
+        },
+        {
+            "source": "VHS Mag",
+            "page_url": "https://www.vhsmag.com/features",
+            "section": "Featured [VHS Mag]",
+            "video_container": {
+                "tag": "article",
+                "target_type": "class",
+                "target_name": "post"
+            },
+            "title":{
+                "tag": "h2",
+                "target_type": "",
+                "target_name": ""
+            },
+            "description": {
+                "tag": "h2",
+                "target_type": "",
+                "target_name": ""
+            },
+            "img_src": {
+                "tag": "figure",
+                "target_type": "class",
+                "target_name": "eyecatch",
+                "find_tag": "img",
+                "find_index": "src"
+            },
+            "url":{
+                "tag": "article",
+                "target_type": "class",
+                "target_name": "post",
+                "find_tag": "a",
+                "find_index": "href"
+            },
+            "date":{
+                "tag": "div",
+                "target_type": "class",
+                "target_name": "date",
+                "find_tag": ""
+            }
+        },
+        {   
+            "source": "Place.tv",
+            "page_url": "https://place.tv",
+            "section": "Featured [Place.tv]",
+            "video_container": {
+                "tag": "article",
+                "target_type": "class",
+                "target_name": "post"
+            },
+            "title": {
+                "tag": "h1",
+                "target_type": "class",
+                "target_name": "entry-title"
+            },
+            "description": {
+                "tag": "h1",
+                "target_type": "class",
+                "target_name": "entry-title"
+            },
+            "img_src": {
+                "tag": "section",
+                "target_type": "class",
+                "target_name": "entry-thumb",
+                "find_tag": "img",
+                "find_index": "src"
+            },
+            "url":{
+                "tag": "h1",
+                "target_type": "class",
+                "target_name": "entry-title",
+                "find_tag": "a",
+                "find_index": "href"
+            },
+            "date":{
+                "tag": "time",
+                "target_type": "class",
+                "target_name": "published",
+                "find_tag": ""
+            }
+        }
+    ]
+}
